@@ -22,8 +22,4 @@ import { Genre, Genres } from "src/common/mock data/books";
     @IsDate({ message: 'Date published must be a valid date' })
     @MaxDate(new Date(), { message: 'Date published cannot be in the future' })
     datePublished: Date;
-  
-    //Many to many relationship with authors
-    @PositiveIntID(true, 'Author')
-    authors: number[];
   }

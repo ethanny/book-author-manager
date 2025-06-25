@@ -8,8 +8,4 @@ export class CreateAuthorDto {
 
     @NonEmptyString('Name')
     name: string;
-
-    //Many to many relationship with books
-    @PositiveIntID(true, 'Book')
-    booksAuthored: number[];
 }

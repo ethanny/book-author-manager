@@ -32,7 +32,6 @@ export const mock_books: CreateBookDto[] = [
       genres: ["Fiction", "Mystery"],
       publisher: 'Southern Press',
       datePublished: new Date('2018-03-10'),
-      authors: [1, 2],
     },
     {
       id: 2,
@@ -40,7 +39,6 @@ export const mock_books: CreateBookDto[] = [
       genres: ['Non-fiction', 'Self-help'],
       publisher: 'Insight Publishing',
       datePublished: new Date('2020-06-15'),
-      authors: [1],
     },
     {
       id: 3,
@@ -48,7 +46,6 @@ export const mock_books: CreateBookDto[] = [
       genres: ['Romance', 'Fiction'],
       publisher: 'Harbor Books',
       datePublished: new Date('2015-02-28'),
-      authors: [3],
     },
     {
       id: 4,
@@ -56,7 +53,6 @@ export const mock_books: CreateBookDto[] = [
       genres: ['Science Fiction', 'Fantasy'],
       publisher: 'Galactic House',
       datePublished: new Date('2021-11-11'),
-      authors: [5],
     },
     {
       id: 5,
@@ -64,6 +60,5 @@ export const mock_books: CreateBookDto[] = [
       genres: ['Science Fiction', 'Thriller'],
       publisher: 'NextGen Reads',
       datePublished: new Date('2023-01-20'),
-      authors: [5],
     },
   ];

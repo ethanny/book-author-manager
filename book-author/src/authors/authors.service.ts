@@ -1,17 +1,14 @@
-import { ConflictException, Injectable, NotFoundException, Inject, forwardRef, UseFilters } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException,} from '@nestjs/common';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { mock_authors } from 'src/common/mock data/authors';
-import { BooksService } from 'src/books/books.service';
+import { CreateBookAuthorDto } from 'src/book-author/dto/create-book-author.dto';
+import { mock_book_authors } from 'src/common/mock data/book-authors';
 
 @Injectable()
 export class AuthorsService {
-  constructor(
-    @Inject(forwardRef(() => BooksService))
-    private readonly booksService: BooksService
-  ) {}
-
   private authors: CreateAuthorDto[] = mock_authors
+  private bookAuthor: CreateBookAuthorDto[] = mock_book_authors
 
   // Get all authors
   getAllAuthors(): CreateAuthorDto[] {
@@ -29,6 +26,10 @@ export class AuthorsService {
     return author;
   }
 
+  getAuthorsFromBook(authorIDs: number[]): CreateAuthorDto[] {
+    return authorIDs.map(authorId => this.getAuthor(authorId));
+  }
+
   // Check if an author exists
   checkAuthorExists(id: number) {
     const existingAuthor = this.authors.find((author) => author.id === id);
@@ -38,24 +39,12 @@ export class AuthorsService {
     }
   }
 
-  //Check if books assigned to author exist
-  checkBooksAuthoredExist(booksAuthored: number[] | undefined) {
-    if(booksAuthored){
-      booksAuthored.forEach(bookId => {
-        this.booksService.getBook(bookId);
-      });
-    }
-  }
-
   // Create an author
   createAuthor(createAuthorDto: CreateAuthorDto): String {
-    const { id, name, booksAuthored } = createAuthorDto
+    const { id, name } = createAuthorDto
 
     //Do not allow duplicate authors
     this.checkAuthorExists(id);
-
-    //Check if books assigned to author exist
-    this.checkBooksAuthoredExist(booksAuthored);
 
     const newAuthor = {...createAuthorDto}
     this.authors.push(newAuthor);
@@ -66,9 +55,6 @@ export class AuthorsService {
   // Update an author
   updateAuthor(id: number, updateAuthorDto: UpdateAuthorDto): String {
     const author = this.getAuthor(id);
-
-    //Check if books assigned to author exist
-    this.checkBooksAuthoredExist(updateAuthorDto.booksAuthored);
 
     //Preserve the same id after editing
     const updatedAuthor = {
@@ -82,22 +68,23 @@ export class AuthorsService {
     return `Author(id: ${author.id}, name: ${author.name}) has been updated`;
   }
 
+  checkAuthorHasBooks(id: number) {
+    const author = this.getAuthor(id);
+    const books = this.bookAuthor.filter((bookAuthor) => bookAuthor.authorId === id);
+    
+    if(books.length > 0){
+      throw new ForbiddenException(`Author(id: ${id}, name: ${author.name}) has books and cannot be deleted`);
+    }
+  }
+
   // Delete an author
   deleteAuthor(id: number): String {
     const author = this.getAuthor(id);
 
-    //Remove author and remove any references to author from books
+    this.checkAuthorHasBooks(id);
+
     this.authors = this.authors.filter((author) => author.id !== id);
-    this.booksService.removeAuthorFromAllBooks(id);
 
     return `Author(id: ${author.id}, name: ${author.name}) has been removed`;
-  }
-
-  // Remove book from authors
-  removeBookFromAllAuthors(bookId: number) {
-    this.authors = this.authors.map((author) => ({
-      ...author,
-      booksAuthored: author.booksAuthored.filter((id) => id !== bookId) ?? [],
-    }));
   }
 }
