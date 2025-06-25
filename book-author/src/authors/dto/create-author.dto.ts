@@ -1,3 +1,4 @@
+import { Type } from "class-transformer";
 import { NonEmptyString } from "src/common/decorators/nonempty_string.decorator";
 import { PositiveIntID } from "src/common/decorators/positive_id.decorator";
 

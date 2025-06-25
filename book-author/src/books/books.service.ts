@@ -52,13 +52,24 @@ export class BooksService {
     }
   }
 
+  //Check if books assigned to author exist
+  checkBookAuthorsExist(bookAuthors: number[] | undefined) {
+    if(bookAuthors){
+      bookAuthors.forEach(authorId => {
+        this.authorsService.getAuthor(authorId);
+      });
+    }
+  }
+
   // Create a book
   createBook(createBookDto: CreateBookDto): String {
-    const { id, title} = createBookDto
+    const { id, title, authors } = createBookDto
 
     //Do not allow duplicate books
     this.checkBookConflict(id);
-
+    //Check if authors assigned to book exist
+    this.checkBookAuthorsExist(authors);
+    
     const newBook = {...createBookDto}
     this.books.push(newBook);
 
@@ -81,6 +92,9 @@ export class BooksService {
   // Update a book
   updateBook(id: number, updateBookDto: UpdateBookDto): String {
     const book = this.getBook(id);
+
+    //Check if authors assigned to book exist
+    this.checkBookAuthorsExist(updateBookDto.authors);
 
     //Preserve the same id after editing
     const updatedBook = {

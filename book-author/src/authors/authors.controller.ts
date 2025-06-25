@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Valida
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
-import { HttpExceptionFilter } from 'src/common/exception filters/http-exception.filter';
 
 @Controller('authors')
 export class AuthorsController {
