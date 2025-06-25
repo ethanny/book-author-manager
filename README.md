@@ -121,7 +121,7 @@ src/
 
 ```bash
 # Clone the repository
-$ git clone <repository-url>
+$ git clone https://github.com/ethanny/book-author-manager.git
 $ cd book-author
 
 # Install dependencies
