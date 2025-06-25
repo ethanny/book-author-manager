@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Inject, forwardRef, UseFilters } from '@nestjs/common';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { mock_authors } from 'src/common/mock data/authors';
