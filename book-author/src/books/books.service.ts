@@ -1,11 +1,14 @@
-import { ConflictException, Injectable, NotFoundException} from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException} from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { mock_books } from 'src/common/mock data/books';
+import { CreateBookAuthorDto } from 'src/book-author/dto/create-book-author.dto';
+import { mock_book_authors } from 'src/common/mock data/book-authors';
 
 @Injectable()
 export class BooksService {
   private books: CreateBookDto[] = mock_books
+  private bookAuthor: CreateBookAuthorDto[] = mock_book_authors
   
   // Get all books
   getAllBooks(): CreateBookDto[] {
@@ -23,6 +26,7 @@ export class BooksService {
     return book;
   }
 
+  // Get books from an author based on a Author ID
   getBooksFromAuthor(bookIds: number[]): CreateBookDto[] {
     return bookIds.map(bookId => this.getBook(bookId));
   }
@@ -65,12 +69,25 @@ export class BooksService {
     return `Book(id: ${book.id}, title: ${book.title}) has been updated`;
   }
 
+  // Check if an book has authors
+  checkAuthorHasBooks(id: number) {
+    const book = this.getBook(id);
+    const authors = this.bookAuthor.filter((bookAuthor) => bookAuthor.bookId === id);
+    
+    if(authors.length > 0){
+      throw new ForbiddenException(`Author(id: ${id}, name: ${book.title}) has authors and cannot be deleted`);
+    }
+  }
+
   // Delete a book
   deleteBook(id: number): String {
     const book = this.getBook(id);
 
+    //Do not allow deletion if the book has authors
+    this.checkAuthorHasBooks(id);
+
     this.books = this.books.filter((book) => book.id !== id);
 
-    return `Book(id: ${book.id}, title: ${book.title}) has been removed and all authors have been removed from this book`;
+    return `Book(id: ${book.id}, title: ${book.title}) has been removed`;
   }
 }

@@ -26,8 +26,9 @@ export class AuthorsService {
     return author;
   }
 
-  getAuthorsFromBook(authorIDs: number[]): CreateAuthorDto[] {
-    return authorIDs.map(authorId => this.getAuthor(authorId));
+  // Get authors from a book based on a Book ID
+  getAuthorsFromBook(authorIds: number[]): CreateAuthorDto[] {
+    return authorIds.map(authorId => this.getAuthor(authorId));
   }
 
   // Check if an author exists
@@ -68,6 +69,7 @@ export class AuthorsService {
     return `Author(id: ${author.id}, name: ${author.name}) has been updated`;
   }
 
+  // Check if an author has books
   checkAuthorHasBooks(id: number) {
     const author = this.getAuthor(id);
     const books = this.bookAuthor.filter((bookAuthor) => bookAuthor.authorId === id);
@@ -81,6 +83,7 @@ export class AuthorsService {
   deleteAuthor(id: number): String {
     const author = this.getAuthor(id);
 
+    //Do not allow deletion if the author has book
     this.checkAuthorHasBooks(id);
 
     this.authors = this.authors.filter((author) => author.id !== id);

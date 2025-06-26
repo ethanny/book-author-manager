@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBookAuthorDto } from './dto/create-book-author.dto';
 import { UpdateBookAuthorDto } from './dto/update-book-author.dto';
 import { mock_book_authors } from 'src/common/mock data/book-authors';
@@ -9,81 +9,166 @@ import { CreateBookDto } from 'src/books/dto/create-book.dto';
 
 @Injectable()
 export class BookAuthorService {
-  constructor(private readonly booksService: BooksService, private readonly authorsService: AuthorsService) {}
-  private bookAuthor: CreateBookAuthorDto[] = mock_book_authors
+  constructor(
+    private readonly booksService: BooksService, 
+    private readonly authorsService: AuthorsService
+  ) {}
+  
+  private bookAuthors: CreateBookAuthorDto[] = mock_book_authors;
 
+  // Get all book author relationships
   getAllBookAuthorRelationships(): CreateBookAuthorDto[] {
-    return this.bookAuthor;
+    return this.bookAuthors;
   }
 
+  // Get a book author relationship by id
   getBookAuthorRelationship(id: number): CreateBookAuthorDto {
-    const author = this.bookAuthor.find((author) => author.bookAuthorId === id);
+    const bookAuthor = this.bookAuthors.find((author) => author.bookAuthorId === id);
 
-    if (!author) {
+    if (!bookAuthor) {
       throw new NotFoundException(`BookAuthor(id: ${id}) not found`);
     }
-    return author;
+
+    return bookAuthor;
   }
 
+  // Get all book ids from an author
   getBookIdsFromAuthor(authorId: number): number[] {
-    const author = this.authorsService.getAuthor(authorId);
+    // Validate author exists
+    this.authorsService.getAuthor(authorId);
     
-    const books = this.bookAuthor
+    const bookIds = this.bookAuthors
       .filter((bookAuthor) => bookAuthor.authorId === authorId)
       .map((bookAuthor) => bookAuthor.bookId);
 
-    return books
+    return bookIds
   }
 
-  getBooksFromAuthor(bookId: number): CreateBookDto[] {
-    const authorIds = this.getAuthorIdsFromBook(bookId);
-    const books = this.booksService.getBooksFromAuthor(authorIds)
-    
-    return books
+  //Get all books from an author
+  getBooksFromAuthor(authorId: number): CreateBookDto[] {
+    const bookIds = this.getBookIdsFromAuthor(authorId);
+    const booksAuthored = this.booksService.getBooksFromAuthor(bookIds);
+
+    return booksAuthored
   }
 
+  // Get all author ids from a book
   getAuthorIdsFromBook(bookId: number): number[] {
-    const book = this.booksService.getBook(bookId);
+    // Validate book exists
+    this.booksService.getBook(bookId);
     
-    const authors = this.bookAuthor
+    const authorIds = this.bookAuthors
       .filter((bookAuthor) => bookAuthor.bookId === bookId)
       .map((bookAuthor) => bookAuthor.authorId);
-    
-      return authors
+
+    return authorIds
   }
 
-  getAuthorsFromBook(authorId: number): CreateAuthorDto[] {
-    const bookIds = this.getBookIdsFromAuthor(authorId);
-    const authors = this.authorsService.getAuthorsFromBook(bookIds)
-    
-    return authors
+  // Get all authors from a book
+  getAuthorsFromBook(bookId: number): CreateAuthorDto[] {
+    const authorIds = this.getAuthorIdsFromBook(bookId);
+    const bookAuthors = this.authorsService.getAuthorsFromBook(authorIds);
+
+    return bookAuthors
   }
 
-  addAuthorToBook(createBookAuthorDto: CreateBookAuthorDto): String {
-    const {bookId, authorId} = createBookAuthorDto
-
+  // Validates that both book and author exist
+  validateBookAndAuthorExist(bookId: number, authorId: number): { book: CreateBookDto; author: CreateAuthorDto } {
     const book = this.booksService.getBook(bookId);
     const author = this.authorsService.getAuthor(authorId);
 
-    //Do not allow duplicate authors in a book
-    // this.checkAuthorConflictInBook(book, author);
+    return { book, author };
+  }
+
+  // Checks if a book author ID already exists
+  checkExistingBookAuthorId(bookAuthorId: number): void {
+    const existingId = this.bookAuthors.find((bookAuthor) => bookAuthor.bookAuthorId === bookAuthorId);
+
+    if (existingId) {
+      throw new ConflictException(`BookAuthor(id: ${bookAuthorId}) already exists`);
+    }
+  }
+
+  // Checks if a book-author relationship already exists
+  private checkRelationshipExists(bookId: number, authorId: number): void {
+    const existingRelationship = this.bookAuthors.some((bookAuthor) => 
+      bookAuthor.bookId === bookId && 
+      bookAuthor.authorId === authorId
+    );
+
+    if (existingRelationship) {
+      throw new ConflictException(`Book(id: ${bookId}) already has author(id: ${authorId})`);
+    }
+  }
+
+  // Creates a book-author relationship
+  addAuthorToBook(createBookAuthorDto: CreateBookAuthorDto): string {
+    const { bookAuthorId, bookId, authorId } = createBookAuthorDto;
+
+    // Validate entities exist
+    const { book, author } = this.validateBookAndAuthorExist(bookId, authorId);
+
+    // Validate no duplicates
+    this.checkExistingBookAuthorId(bookAuthorId);
+    this.checkRelationshipExists(bookId, authorId);
     
-    const NewBookAuthor = {...createBookAuthorDto}
-    this.bookAuthor.push(NewBookAuthor);
+    const newBookAuthor = { ...createBookAuthorDto };
+    this.bookAuthors.push(newBookAuthor);
 
     return `Author(id: ${authorId}, name: ${author.name}) has been added to book(id: ${bookId}, title: ${book.title})`;
   }
 
-  removeAuthorFromBook(bookId: number, authorId: number): String {
-    const book = this.booksService.getBook(bookId);
-    const author = this.authorsService.getAuthor(authorId);
+  // Update a book-author relationship
+  updateBookAuthorRelationship(bookAuthorId: number, updateBookAuthorDto: UpdateBookAuthorDto): string {
+    const existingBookAuthor = this.getBookAuthorRelationship(bookAuthorId);
 
-    this.bookAuthor = this.bookAuthor.filter((bookAuthor) => bookAuthor.bookId !== bookId && bookAuthor.authorId !== authorId);
+    // Create updated relationship while preserving the ID
+    const updatedBookAuthor = {
+      ...existingBookAuthor, 
+      ...updateBookAuthorDto,
+      bookAuthorId: bookAuthorId,
+    };
+
+    // Validate entities exist
+    const { book, author } = this.validateBookAndAuthorExist(updatedBookAuthor.bookId, updatedBookAuthor.authorId);
+
+    // Check for duplicate relationships (excluding current record)
+    this.checkRelationshipExists(updatedBookAuthor.bookId, updatedBookAuthor.authorId);
+
+    // Update the relationship
+    this.bookAuthors = this.bookAuthors.map((bookAuthor) => 
+      bookAuthor.bookAuthorId === bookAuthorId ? updatedBookAuthor : bookAuthor
+    );
+
+    return `BookAuthor(id: ${bookAuthorId}) has been updated to Book(id: ${book.id}, title: ${book.title}) - Author(id: ${author.id}, name: ${author.name})`;
+  }
+
+  // Removes a book-author relationship by book and author IDs
+  removeAuthorFromBook(bookId: number, authorId: number): string {
+    // Validate entities exist
+    const { book, author } = this.validateBookAndAuthorExist(bookId, authorId);
+
+    const relationshipExists = this.bookAuthors.some((bookAuthor) => 
+      bookAuthor.bookId === bookId && bookAuthor.authorId === authorId
+    );
+
+    if (!relationshipExists) {
+      throw new NotFoundException(`Book(id: ${bookId}) does not have author(id: ${authorId})`);
+    }
+
+    this.bookAuthors = this.bookAuthors.filter((bookAuthor) => 
+      !(bookAuthor.bookId === bookId && bookAuthor.authorId === authorId)
+    );
 
     return `Author(id: ${authorId}, name: ${author.name}) has been removed from book(id: ${bookId}, title: ${book.title})`;
   }
 
-  update(id: number, updateBookAuthorDto: UpdateBookAuthorDto) {
-    return `This action updates a #${id} bookAuthor`;
+  // Removes a book-author relationship by relationship ID
+  removeBookAuthorRelationship(bookAuthorId: number): string {
+    const bookAuthor = this.getBookAuthorRelationship(bookAuthorId);
+
+    this.bookAuthors = this.bookAuthors.filter((ba) => ba.bookAuthorId !== bookAuthorId);
+
+    return `BookAuthor(id: ${bookAuthorId}) has been removed`;
   }
 }
