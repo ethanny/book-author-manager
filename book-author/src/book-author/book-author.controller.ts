@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Query, ParseIntPipe, ValidationPipe, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query, ParseIntPipe, Patch } from '@nestjs/common';
 import { BookAuthorService } from './book-author.service';
 import { CreateBookAuthorDto } from './dto/create-book-author.dto';
 import { UpdateBookAuthorDto } from './dto/update-book-author.dto';
@@ -59,7 +59,7 @@ export class BookAuthorController {
     type: CreateBookAuthorDto,
     description: 'Book-author relationship data to create'
   })
-  addAuthorToBook(@Body(new ValidationPipe()) createBookAuthorDto: CreateBookAuthorDto) {
+  addAuthorToBook(@Body() createBookAuthorDto: CreateBookAuthorDto) {
     return this.bookAuthorService.addAuthorToBook(createBookAuthorDto);
   }
 
@@ -75,7 +75,7 @@ export class BookAuthorController {
     type: UpdateBookAuthorDto,
     description: 'Updated book-author relationship data'
   })
-  updateBookAuthorRelationship(@Param('id', ParseIntPipe) id: number, @Body(new ValidationPipe()) updateBookAuthorDto: UpdateBookAuthorDto) {
+  updateBookAuthorRelationship(@Param('id', ParseIntPipe) id: number, @Body() updateBookAuthorDto: UpdateBookAuthorDto) {
     return this.bookAuthorService.updateBookAuthorRelationship(id, updateBookAuthorDto);
   }
 

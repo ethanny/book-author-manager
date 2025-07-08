@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Books')
 @Controller('books')
@@ -35,7 +35,7 @@ export class BooksController {
     type: CreateBookDto,
     description: 'Book data to create'
   })
-  createBook(@Body(new ValidationPipe()) createBookDto: CreateBookDto) {
+  createBook(@Body() createBookDto: CreateBookDto) {
     return this.booksService.createBook(createBookDto);
   }
 
@@ -51,7 +51,7 @@ export class BooksController {
     type: UpdateBookDto,
     description: 'Updated book data'
   })
-  updateBook(@Param('id', ParseIntPipe) id: number, @Body(new ValidationPipe()) updateBookDto: UpdateBookDto) {
+  updateBook(@Param('id', ParseIntPipe) id: number, @Body() updateBookDto: UpdateBookDto) {
     return this.booksService.updateBook(id, updateBookDto);
   }
 

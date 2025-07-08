@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
@@ -35,7 +35,7 @@ export class AuthorsController {
     type: CreateAuthorDto,
     description: 'Author data to create'
   })
-  createAuthor(@Body(new ValidationPipe()) createAuthorDto: CreateAuthorDto) {
+  createAuthor(@Body() createAuthorDto: CreateAuthorDto) {
     return this.authorsService.createAuthor(createAuthorDto);
   }
 
@@ -51,7 +51,7 @@ export class AuthorsController {
     type: UpdateAuthorDto,
     description: 'Updated author data'
   })
-  updateAuthor(@Param('id', ParseIntPipe) id: number, @Body(new ValidationPipe()) updateAuthorDto: UpdateAuthorDto) {
+  updateAuthor(@Param('id', ParseIntPipe) id: number, @Body() updateAuthorDto: UpdateAuthorDto) {
     return this.authorsService.updateAuthor(id, updateAuthorDto);
   }
 
